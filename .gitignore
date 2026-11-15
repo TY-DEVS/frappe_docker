@@ -1,5 +1,4 @@
 # Environment Variables
-.env
 
 # mounted volume
 sites
@@ -14,7 +13,6 @@ development/*
 .idea
 
 # VS Code
-.vscode/**
 !.vscode/extensions.json
 
 # VS Code devcontainer
@@ -32,3 +30,4 @@ node_modules
 # VitePress
 **/.vitepress/dist
 **/.vitepress/cache
+config.bat
