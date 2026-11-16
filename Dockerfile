@@ -8,6 +8,10 @@ RUN bench get-app --branch=main --resolve-deps crm https://github.com/frappe/crm
     && (cd apps/crm/frontend && yarn install --network-concurrency 1 --network-timeout 300000 && yarn build) \
     && bench build --app crm \
     && ln -sf /home/frappe/frappe-bench/apps/crm/crm/public /home/frappe/frappe-bench/assets/crm \
+    && bench get-app --branch=version-16 --resolve-deps helpdesk https://github.com/frappe/helpdesk \
+    && (cd apps/helpdesk/desk && yarn install --network-concurrency 1 --network-timeout 300000 && yarn build) \
+    && bench build --app helpdesk \
+    && ln -sf /home/frappe/frappe-bench/apps/helpdesk/helpdesk/public /home/frappe/frappe-bench/assets/helpdesk \
     && find apps -mindepth 1 -path "*/.git" | xargs --no-run-if-empty rm -fr \
     && cp -r /home/frappe/frappe-bench/sites/assets/* /home/frappe/frappe-bench/assets/ 2>/dev/null || true \
     && rm -rf /home/frappe/frappe-bench/sites/assets

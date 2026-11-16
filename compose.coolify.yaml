@@ -90,6 +90,13 @@ services:
       - traefik.http.routers.frappe-crm-https.tls=true
       - traefik.http.routers.frappe-crm-https.tls.certresolver=letsencrypt
       - traefik.http.routers.frappe-crm-https.service=frappe-frontend
+      - traefik.http.routers.frappe-helpdesk-http.rule=Host(`helpdesk.ty-dev.site`)
+      - traefik.http.routers.frappe-helpdesk-http.entrypoints=http
+      - traefik.http.routers.frappe-helpdesk-https.rule=Host(`helpdesk.ty-dev.site`)
+      - traefik.http.routers.frappe-helpdesk-https.entrypoints=https
+      - traefik.http.routers.frappe-helpdesk-https.tls=true
+      - traefik.http.routers.frappe-helpdesk-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.frappe-helpdesk-https.service=frappe-frontend
       - traefik.http.services.frappe-frontend.loadbalancer.server.port=8080
 
   websocket:
@@ -207,6 +214,20 @@ services:
             --install-app crm;
           bench --site crm.ty-dev.site set-config home_page crm;
           echo "crm.ty-dev.site initialization completed!";
+        fi;
+        if [ -d "sites/helpdesk.ty-dev.site" ]; then
+          echo "Site helpdesk.ty-dev.site exists, running migrations...";
+          bench --site helpdesk.ty-dev.site migrate;
+        else
+          echo "Creating site helpdesk.ty-dev.site with Frappe Helpdesk...";
+          bench new-site helpdesk.ty-dev.site \
+            --mariadb-user-host-login-scope='%' \
+            --admin-password=$${ADMIN_PASSWORD:-admin} \
+            --db-root-username=root \
+            --db-root-password=$${DB_PASSWORD:-admin} \
+            --install-app helpdesk;
+          bench --site helpdesk.ty-dev.site set-config home_page helpdesk;
+          echo "helpdesk.ty-dev.site initialization completed!";
         fi;
     volumes:
       - sites:/home/frappe/frappe-bench/sites
