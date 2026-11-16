@@ -59,7 +59,6 @@ services:
       BACKEND: frappe-backend:8000
       SOCKETIO: frappe-websocket:9000
       NGINX_LISTEN_PORT: "8080"
-      FRAPPE_SITE_NAME_HEADER: ${FRAPPE_SITE_NAME_HEADER:-erp.ty-dev.site}
       UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
       UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
       UPSTREAM_REAL_IP_RECURSIVE: "off"
@@ -77,9 +76,9 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
-      - traefik.http.routers.frappe-erp-http.rule=Host(`erp.ty-dev.site`)
+      - traefik.http.routers.frappe-erp-http.rule=Host(`erp.ty-dev.site`) || Host(`crm.ty-dev.site`)
       - traefik.http.routers.frappe-erp-http.entrypoints=http
-      - traefik.http.routers.frappe-erp-https.rule=Host(`erp.ty-dev.site`)
+      - traefik.http.routers.frappe-erp-https.rule=Host(`erp.ty-dev.site`) || Host(`crm.ty-dev.site`)
       - traefik.http.routers.frappe-erp-https.entrypoints=https
       - traefik.http.routers.frappe-erp-https.tls=true
       - traefik.http.routers.frappe-erp-https.tls.certresolver=letsencrypt
@@ -175,9 +174,9 @@ services:
           fi
         done;
         echo "sites/common_site_config.json found";
+        # 1. Manage ERPNext site
         if [ -d "sites/erp.ty-dev.site" ]; then
-          echo "Site erp.ty-dev.site already exists, running migrations...";
-          bench --site erp.ty-dev.site install-app crm || true;
+          echo "Site erp.ty-dev.site exists, running migrations...";
           bench --site erp.ty-dev.site migrate;
         else
           echo "Creating site erp.ty-dev.site with ERPNext...";
@@ -186,11 +185,23 @@ services:
             --admin-password=$${ADMIN_PASSWORD:-admin} \
             --db-root-username=root \
             --db-root-password=$${DB_PASSWORD:-admin} \
-            --install-app erpnext \
-            --set-default;
-          echo "Installing Frappe CRM on erp.ty-dev.site...";
-          bench --site erp.ty-dev.site install-app crm;
-          echo "Site initialization completed successfully!";
+            --install-app erpnext;
+        fi;
+
+        # 2. Manage Frappe CRM site
+        if [ -d "sites/crm.ty-dev.site" ]; then
+          echo "Site crm.ty-dev.site exists, running migrations...";
+          bench --site crm.ty-dev.site migrate;
+        else
+          echo "Creating site crm.ty-dev.site with Frappe CRM...";
+          bench new-site crm.ty-dev.site \
+            --mariadb-user-host-login-scope='%' \
+            --admin-password=$${ADMIN_PASSWORD:-admin} \
+            --db-root-username=root \
+            --db-root-password=$${DB_PASSWORD:-admin} \
+            --install-app crm;
+          bench --site crm.ty-dev.site set-config home_page crm;
+          echo "crm.ty-dev.site initialization completed!";
         fi;
     volumes:
       - sites:/home/frappe/frappe-bench/sites
