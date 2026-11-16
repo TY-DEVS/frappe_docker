@@ -16,9 +16,14 @@ RUN set -e; \
 
 RUN set -e; \
     bench build --app crm; \
+    ln -sf /home/frappe/frappe-bench/apps/crm/crm/public /home/frappe/frappe-bench/assets/crm
+
+RUN set -e; \
+    bench set-config -gp socketio_port 9000; \
     bench build --app helpdesk; \
-    ln -sf /home/frappe/frappe-bench/apps/crm/crm/public /home/frappe/frappe-bench/assets/crm; \
-    ln -sf /home/frappe/frappe-bench/apps/helpdesk/helpdesk/public /home/frappe/frappe-bench/assets/helpdesk; \
+    ln -sf /home/frappe/frappe-bench/apps/helpdesk/helpdesk/public /home/frappe/frappe-bench/assets/helpdesk
+
+RUN set -e; \
     find apps -mindepth 1 -path "*/.git" | xargs --no-run-if-empty rm -fr; \
     (cp -r /home/frappe/frappe-bench/sites/assets/* /home/frappe/frappe-bench/assets/ 2>/dev/null || true); \
     rm -rf /home/frappe/frappe-bench/sites/assets
