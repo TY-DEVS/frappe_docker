@@ -174,7 +174,6 @@ services:
           fi
         done;
         echo "sites/common_site_config.json found";
-        # 1. Manage ERPNext site
         if [ -d "sites/erp.ty-dev.site" ]; then
           echo "Site erp.ty-dev.site exists, running migrations...";
           bench --site erp.ty-dev.site migrate;
@@ -187,8 +186,6 @@ services:
             --db-root-password=$${DB_PASSWORD:-admin} \
             --install-app erpnext;
         fi;
-
-        # 2. Manage Frappe CRM site
         if [ -d "sites/crm.ty-dev.site" ]; then
           echo "Site crm.ty-dev.site exists, running migrations...";
           bench --site crm.ty-dev.site migrate;
