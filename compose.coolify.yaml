@@ -58,6 +58,7 @@ services:
     environment:
       BACKEND: frappe-backend:8000
       SOCKETIO: frappe-websocket:9000
+      FRAPPE_SITE_NAME_HEADER: $$host
       NGINX_LISTEN_PORT: "8080"
       UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
       UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
