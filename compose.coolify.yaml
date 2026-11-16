@@ -177,6 +177,7 @@ services:
         echo "sites/common_site_config.json found";
         if [ -d "sites/erp.ty-dev.site" ]; then
           echo "Site erp.ty-dev.site already exists, running migrations...";
+          bench --site erp.ty-dev.site install-app crm || true;
           bench --site erp.ty-dev.site migrate;
         else
           echo "Creating site erp.ty-dev.site with ERPNext...";
