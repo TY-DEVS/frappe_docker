@@ -76,13 +76,21 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
-      - traefik.http.routers.frappe-erp-http.rule=Host(`erp.ty-dev.site`) || Host(`crm.ty-dev.site`)
+      - traefik.http.routers.frappe-erp-http.rule=Host(`erp.ty-dev.site`)
       - traefik.http.routers.frappe-erp-http.entrypoints=http
-      - traefik.http.routers.frappe-erp-https.rule=Host(`erp.ty-dev.site`) || Host(`crm.ty-dev.site`)
+      - traefik.http.routers.frappe-erp-https.rule=Host(`erp.ty-dev.site`)
       - traefik.http.routers.frappe-erp-https.entrypoints=https
       - traefik.http.routers.frappe-erp-https.tls=true
       - traefik.http.routers.frappe-erp-https.tls.certresolver=letsencrypt
-      - traefik.http.services.frappe-erp.loadbalancer.server.port=8080
+      - traefik.http.routers.frappe-erp-https.service=frappe-frontend
+      - traefik.http.routers.frappe-crm-http.rule=Host(`crm.ty-dev.site`)
+      - traefik.http.routers.frappe-crm-http.entrypoints=http
+      - traefik.http.routers.frappe-crm-https.rule=Host(`crm.ty-dev.site`)
+      - traefik.http.routers.frappe-crm-https.entrypoints=https
+      - traefik.http.routers.frappe-crm-https.tls=true
+      - traefik.http.routers.frappe-crm-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.frappe-crm-https.service=frappe-frontend
+      - traefik.http.services.frappe-frontend.loadbalancer.server.port=8080
 
   websocket:
     image: frappe-custom:v16
