@@ -216,8 +216,13 @@ services:
           echo "crm.ty-dev.site initialization completed!";
         fi;
         if [ -d "sites/helpdesk.ty-dev.site" ]; then
-          echo "Site helpdesk.ty-dev.site exists, running migrations...";
+          echo "Site helpdesk.ty-dev.site exists...";
+          if ! bench --site helpdesk.ty-dev.site list-apps | grep -q helpdesk; then
+            echo "Installing helpdesk app on helpdesk.ty-dev.site...";
+            bench --site helpdesk.ty-dev.site install-app helpdesk;
+          fi;
           bench --site helpdesk.ty-dev.site migrate;
+          bench --site helpdesk.ty-dev.site set-config home_page helpdesk;
         else
           echo "Creating site helpdesk.ty-dev.site with Frappe Helpdesk...";
           bench new-site helpdesk.ty-dev.site \
