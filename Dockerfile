@@ -25,6 +25,7 @@ RUN set -e; \
 
 RUN set -e; \
     find apps -mindepth 1 -path "*/.git" | xargs --no-run-if-empty rm -fr; \
+    bench build --using-cached; \
     (cp -r /home/frappe/frappe-bench/sites/assets/* /home/frappe/frappe-bench/assets/ 2>/dev/null || true); \
     rm -rf /home/frappe/frappe-bench/sites/assets
 
