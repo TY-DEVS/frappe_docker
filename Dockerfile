@@ -8,11 +8,13 @@ RUN set -e; \
     yarn config set network-concurrency 2; \
     yarn config set network-timeout 300000; \
     bench get-app --branch=main --resolve-deps --skip-assets crm https://github.com/frappe/crm; \
-    bench get-app --branch=version-16 --resolve-deps --skip-assets helpdesk https://github.com/frappe/helpdesk
+    bench get-app --branch=version-16 --resolve-deps --skip-assets helpdesk https://github.com/frappe/helpdesk; \
+    bench get-app --branch=version-16 --resolve-deps --skip-assets hrms https://github.com/frappe/hrms
 
 RUN set -e; \
     (cd apps/crm/frontend && yarn install --network-concurrency 2 --network-timeout 300000); \
-    (cd apps/helpdesk/desk && yarn install --network-concurrency 2 --network-timeout 300000)
+    (cd apps/helpdesk/desk && yarn install --network-concurrency 2 --network-timeout 300000); \
+    (cd apps/hrms && yarn install --network-concurrency 2 --network-timeout 300000)
 
 RUN set -e; \
     bench build --app crm; \
@@ -22,6 +24,10 @@ RUN set -e; \
     bench set-config -gp socketio_port 9000; \
     bench build --app helpdesk; \
     ln -sf /home/frappe/frappe-bench/apps/helpdesk/helpdesk/public /home/frappe/frappe-bench/assets/helpdesk
+
+RUN set -e; \
+    bench build --app hrms; \
+    ln -sf /home/frappe/frappe-bench/apps/hrms/hrms/public /home/frappe/frappe-bench/assets/hrms
 
 RUN set -e; \
     find apps -mindepth 1 -path "*/.git" | xargs --no-run-if-empty rm -fr; \

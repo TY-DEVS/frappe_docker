@@ -226,16 +226,24 @@ services:
         done;
         echo "sites/common_site_config.json found";
         if [ -d "sites/erp.ty-dev.site" ]; then
-          echo "Site erp.ty-dev.site exists, running migrations...";
+          echo "Site erp.ty-dev.site exists, checking hrms...";
+          if ! bench --site erp.ty-dev.site list-apps | grep -q hrms; then
+            echo "Installing hrms on erp.ty-dev.site...";
+            bench --site erp.ty-dev.site install-app hrms;
+            bench --site erp.ty-dev.site set-config default_app erpnext;
+          fi;
+          echo "Running migrations for erp.ty-dev.site...";
           bench --site erp.ty-dev.site migrate;
         else
-          echo "Creating site erp.ty-dev.site with ERPNext...";
+          echo "Creating site erp.ty-dev.site with ERPNext and HRMS...";
           bench new-site erp.ty-dev.site \
             --mariadb-user-host-login-scope='%' \
             --admin-password=$${ADMIN_PASSWORD:-admin} \
             --db-root-username=root \
             --db-root-password=$${DB_PASSWORD:-admin} \
-            --install-app erpnext;
+            --install-app erpnext \
+            --install-app hrms;
+          bench --site erp.ty-dev.site set-config default_app erpnext;
         fi;
         if [ -d "sites/crm.ty-dev.site" ]; then
           echo "Site crm.ty-dev.site exists, running migrations...";
