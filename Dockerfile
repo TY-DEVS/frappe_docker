@@ -23,8 +23,10 @@ RUN set -e; \
     ln -sf /home/frappe/frappe-bench/apps/helpdesk/helpdesk/public /home/frappe/frappe-bench/assets/helpdesk
 
 RUN set -e; \
-    bench get-app --branch=version-16 --resolve-deps --skip-assets hrms https://github.com/frappe/hrms; \
-    (cd apps/hrms && yarn install --network-concurrency 2 --network-timeout 300000); \
+    yarn config set ignore-scripts true; \
+    bench get-app --branch=version-16 --skip-assets hrms https://github.com/frappe/hrms; \
+    yarn config set ignore-scripts false; \
+    npm --prefix apps/hrms pkg delete scripts.build scripts.postinstall; \
     bench build --app hrms; \
     ln -sf /home/frappe/frappe-bench/apps/hrms/hrms/public /home/frappe/frappe-bench/assets/hrms
 
