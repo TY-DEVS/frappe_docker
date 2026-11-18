@@ -227,58 +227,56 @@ services:
         done;
         echo "sites/common_site_config.json found";
         if [ -d "sites/erp.ty-dev.site" ]; then
-          echo "Site erp.ty-dev.site exists, checking hrms...";
-          if ! bench --site erp.ty-dev.site list-apps | grep -q hrms; then
-            echo "Installing hrms on erp.ty-dev.site...";
-            bench --site erp.ty-dev.site install-app hrms;
-            bench --site erp.ty-dev.site set-config default_app erpnext;
-          fi;
+          echo "Site erp.ty-dev.site exists, ensuring all unified agency apps are installed...";
+          for app in hrms crm telephony helpdesk; do
+            if ! bench --site erp.ty-dev.site list-apps | grep -q $$app; then
+              echo "Installing $$app on erp.ty-dev.site...";
+              bench --site erp.ty-dev.site install-app $$app;
+            fi;
+          done;
+          bench --site erp.ty-dev.site set-config default_app erpnext;
           echo "Running migrations for erp.ty-dev.site...";
           bench --site erp.ty-dev.site migrate;
         else
-          echo "Creating site erp.ty-dev.site with ERPNext and HRMS...";
+          echo "Creating site erp.ty-dev.site with full agency suite (ERPNext, HRMS, CRM, Helpdesk)...";
           bench new-site erp.ty-dev.site \
             --mariadb-user-host-login-scope='%' \
             --admin-password=$${ADMIN_PASSWORD:-admin} \
             --db-root-username=root \
             --db-root-password=$${DB_PASSWORD:-admin} \
             --install-app erpnext \
-            --install-app hrms;
+            --install-app hrms \
+            --install-app crm \
+            --install-app telephony \
+            --install-app helpdesk;
           bench --site erp.ty-dev.site set-config default_app erpnext;
         fi;
-        if [ -d "sites/crm.ty-dev.site" ]; then
-          echo "Site crm.ty-dev.site exists, running migrations...";
-          bench --site crm.ty-dev.site migrate;
-        else
-          echo "Creating site crm.ty-dev.site with Frappe CRM...";
-          bench new-site crm.ty-dev.site \
-            --mariadb-user-host-login-scope='%' \
-            --admin-password=$${ADMIN_PASSWORD:-admin} \
-            --db-root-username=root \
-            --db-root-password=$${DB_PASSWORD:-admin} \
-            --install-app crm;
-          bench --site crm.ty-dev.site set-config home_page crm;
-          echo "crm.ty-dev.site initialization completed!";
-        fi;
-        if [ -d "sites/helpdesk.ty-dev.site" ]; then
-          echo "Site helpdesk.ty-dev.site exists...";
-          if ! bench --site helpdesk.ty-dev.site list-apps | grep -q helpdesk; then
-            echo "Installing helpdesk app on helpdesk.ty-dev.site...";
-            bench --site helpdesk.ty-dev.site install-app helpdesk;
-          fi;
-          bench --site helpdesk.ty-dev.site migrate;
-          bench --site helpdesk.ty-dev.site set-config home_page helpdesk;
-        else
-          echo "Creating site helpdesk.ty-dev.site with Frappe Helpdesk...";
-          bench new-site helpdesk.ty-dev.site \
-            --mariadb-user-host-login-scope='%' \
-            --admin-password=$${ADMIN_PASSWORD:-admin} \
-            --db-root-username=root \
-            --db-root-password=$${DB_PASSWORD:-admin} \
-            --install-app helpdesk;
-          bench --site helpdesk.ty-dev.site set-config home_page helpdesk;
-          echo "helpdesk.ty-dev.site initialization completed!";
-        fi;
+        echo "Ensuring unified database configuration for crm and helpdesk domains...";
+        python3 -c "
+import json, os, shutil
+sites_dir = 'sites'
+erp_cfg_path = os.path.join(sites_dir, 'erp.ty-dev.site', 'site_config.json')
+if os.path.exists(erp_cfg_path):
+    with open(erp_cfg_path) as f:
+        cfg = json.load(f)
+    for sub, home, defapp in [('crm.ty-dev.site', 'crm', 'crm'), ('helpdesk.ty-dev.site', 'helpdesk', 'helpdesk')]:
+        sdir = os.path.join(sites_dir, sub)
+        os.makedirs(sdir, exist_ok=True)
+        scfg = dict(cfg)
+        scfg['home_page'] = home
+        scfg['default_app'] = defapp
+        with open(os.path.join(sdir, 'site_config.json'), 'w') as f:
+            json.dump(scfg, f, indent=1)
+        for fold in ['public/files', 'private/files']:
+            target = os.path.join(sites_dir, 'erp.ty-dev.site', fold)
+            link = os.path.join(sdir, fold)
+            os.makedirs(target, exist_ok=True)
+            if os.path.exists(link) and not os.path.islink(link):
+                shutil.rmtree(link)
+            if not os.path.exists(link):
+                os.symlink(target, link)
+    print('Unified multi-domain sites configuration verified.')
+";
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
