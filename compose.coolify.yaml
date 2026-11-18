@@ -18,6 +18,7 @@ services:
         bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
         bench set-config -gp socketio_port $$SOCKETIO_PORT;
         bench set-config -g chromium_path /usr/lib/chromium/chromium-headless-shell;
+        bench set-config -g cookie_domain ".ty-dev.site";
     environment:
       DB_HOST: db
       DB_PORT: "3306"
@@ -109,6 +110,27 @@ services:
       - traefik.http.routers.frappe-helpdesk-https.entrypoints=https
       - traefik.http.routers.frappe-helpdesk-https.tls=true
       - traefik.http.routers.frappe-helpdesk-https.service=frappe-frontend
+      - traefik.http.routers.frappe-chat-http.rule=Host(`chat.ty-dev.site`)
+      - traefik.http.routers.frappe-chat-http.entrypoints=http
+      - traefik.http.routers.frappe-chat-http.service=frappe-frontend
+      - traefik.http.routers.frappe-chat-https.rule=Host(`chat.ty-dev.site`)
+      - traefik.http.routers.frappe-chat-https.entrypoints=https
+      - traefik.http.routers.frappe-chat-https.tls=true
+      - traefik.http.routers.frappe-chat-https.service=frappe-frontend
+      - traefik.http.routers.frappe-wiki-http.rule=Host(`wiki.ty-dev.site`)
+      - traefik.http.routers.frappe-wiki-http.entrypoints=http
+      - traefik.http.routers.frappe-wiki-http.service=frappe-frontend
+      - traefik.http.routers.frappe-wiki-https.rule=Host(`wiki.ty-dev.site`)
+      - traefik.http.routers.frappe-wiki-https.entrypoints=https
+      - traefik.http.routers.frappe-wiki-https.tls=true
+      - traefik.http.routers.frappe-wiki-https.service=frappe-frontend
+      - traefik.http.routers.frappe-insights-http.rule=Host(`insights.ty-dev.site`)
+      - traefik.http.routers.frappe-insights-http.entrypoints=http
+      - traefik.http.routers.frappe-insights-http.service=frappe-frontend
+      - traefik.http.routers.frappe-insights-https.rule=Host(`insights.ty-dev.site`)
+      - traefik.http.routers.frappe-insights-https.entrypoints=https
+      - traefik.http.routers.frappe-insights-https.tls=true
+      - traefik.http.routers.frappe-insights-https.service=frappe-frontend
       - traefik.http.services.frappe-frontend.loadbalancer.server.port=8080
       - traefik.http.services.frontend.loadbalancer.server.port=8080
 
@@ -228,17 +250,18 @@ services:
         echo "sites/common_site_config.json found";
         if [ -d "sites/erp.ty-dev.site" ]; then
           echo "Site erp.ty-dev.site exists, ensuring all unified agency apps are installed...";
-          for app in hrms crm telephony helpdesk; do
+          for app in hrms crm telephony helpdesk raven wiki insights; do
             if ! bench --site erp.ty-dev.site list-apps | grep -q $$app; then
               echo "Installing $$app on erp.ty-dev.site...";
               bench --site erp.ty-dev.site install-app $$app;
             fi;
           done;
           bench --site erp.ty-dev.site set-config default_app erpnext;
+          bench --site erp.ty-dev.site set-config cookie_domain ".ty-dev.site";
           echo "Running migrations for erp.ty-dev.site...";
           bench --site erp.ty-dev.site migrate;
         else
-          echo "Creating site erp.ty-dev.site with full agency suite (ERPNext, HRMS, CRM, Helpdesk)...";
+          echo "Creating site erp.ty-dev.site with full agency suite (ERPNext, HRMS, CRM, Helpdesk, Raven, Wiki, Insights)...";
           bench new-site erp.ty-dev.site \
             --mariadb-user-host-login-scope='%' \
             --admin-password=$${ADMIN_PASSWORD:-admin} \
@@ -248,10 +271,14 @@ services:
             --install-app hrms \
             --install-app crm \
             --install-app telephony \
-            --install-app helpdesk;
+            --install-app helpdesk \
+            --install-app raven \
+            --install-app wiki \
+            --install-app insights;
           bench --site erp.ty-dev.site set-config default_app erpnext;
+          bench --site erp.ty-dev.site set-config cookie_domain ".ty-dev.site";
         fi;
-        echo "Ensuring unified database configuration for crm and helpdesk domains...";
+        echo "Ensuring unified database configuration for crm, helpdesk, chat, wiki, and insights domains...";
         python3 -c "
 import json, os, shutil
 sites_dir = 'sites'
@@ -259,12 +286,23 @@ erp_cfg_path = os.path.join(sites_dir, 'erp.ty-dev.site', 'site_config.json')
 if os.path.exists(erp_cfg_path):
     with open(erp_cfg_path) as f:
         cfg = json.load(f)
-    for sub, home, defapp in [('crm.ty-dev.site', 'crm', 'crm'), ('helpdesk.ty-dev.site', 'helpdesk', 'helpdesk')]:
+    cfg['cookie_domain'] = '.ty-dev.site'
+    with open(erp_cfg_path, 'w') as f:
+        json.dump(cfg, f, indent=1)
+    subdomains = [
+        ('crm.ty-dev.site', 'crm', 'crm'),
+        ('helpdesk.ty-dev.site', 'helpdesk', 'helpdesk'),
+        ('chat.ty-dev.site', 'raven', 'raven'),
+        ('wiki.ty-dev.site', 'wiki-app', 'wiki'),
+        ('insights.ty-dev.site', 'insights', 'insights')
+    ]
+    for sub, home, defapp in subdomains:
         sdir = os.path.join(sites_dir, sub)
         os.makedirs(sdir, exist_ok=True)
         scfg = dict(cfg)
         scfg['home_page'] = home
         scfg['default_app'] = defapp
+        scfg['cookie_domain'] = '.ty-dev.site'
         with open(os.path.join(sdir, 'site_config.json'), 'w') as f:
             json.dump(scfg, f, indent=1)
         for fold in ['public/files', 'private/files']:
