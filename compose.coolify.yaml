@@ -90,26 +90,27 @@ services:
       - traefik.docker.network=coolify
       - traefik.http.routers.frappe-erp-http.rule=Host(`erp.ty-dev.site`)
       - traefik.http.routers.frappe-erp-http.entrypoints=http
+      - traefik.http.routers.frappe-erp-http.service=frappe-frontend
       - traefik.http.routers.frappe-erp-https.rule=Host(`erp.ty-dev.site`)
       - traefik.http.routers.frappe-erp-https.entrypoints=https
       - traefik.http.routers.frappe-erp-https.tls=true
-      - traefik.http.routers.frappe-erp-https.tls.certresolver=letsencrypt
       - traefik.http.routers.frappe-erp-https.service=frappe-frontend
       - traefik.http.routers.frappe-crm-http.rule=Host(`crm.ty-dev.site`)
       - traefik.http.routers.frappe-crm-http.entrypoints=http
+      - traefik.http.routers.frappe-crm-http.service=frappe-frontend
       - traefik.http.routers.frappe-crm-https.rule=Host(`crm.ty-dev.site`)
       - traefik.http.routers.frappe-crm-https.entrypoints=https
       - traefik.http.routers.frappe-crm-https.tls=true
-      - traefik.http.routers.frappe-crm-https.tls.certresolver=letsencrypt
       - traefik.http.routers.frappe-crm-https.service=frappe-frontend
       - traefik.http.routers.frappe-helpdesk-http.rule=Host(`helpdesk.ty-dev.site`)
       - traefik.http.routers.frappe-helpdesk-http.entrypoints=http
+      - traefik.http.routers.frappe-helpdesk-http.service=frappe-frontend
       - traefik.http.routers.frappe-helpdesk-https.rule=Host(`helpdesk.ty-dev.site`)
       - traefik.http.routers.frappe-helpdesk-https.entrypoints=https
       - traefik.http.routers.frappe-helpdesk-https.tls=true
-      - traefik.http.routers.frappe-helpdesk-https.tls.certresolver=letsencrypt
       - traefik.http.routers.frappe-helpdesk-https.service=frappe-frontend
       - traefik.http.services.frappe-frontend.loadbalancer.server.port=8080
+      - traefik.http.services.frontend.loadbalancer.server.port=8080
 
   websocket:
     image: frappe-custom:v16
