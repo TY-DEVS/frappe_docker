@@ -280,41 +280,41 @@ services:
         fi;
         echo "Ensuring unified database configuration for crm, helpdesk, chat, wiki, and insights domains...";
         python3 -c "
-import json, os, shutil
-sites_dir = 'sites'
-erp_cfg_path = os.path.join(sites_dir, 'erp.ty-dev.site', 'site_config.json')
-if os.path.exists(erp_cfg_path):
-    with open(erp_cfg_path) as f:
-        cfg = json.load(f)
-    cfg['cookie_domain'] = '.ty-dev.site'
-    with open(erp_cfg_path, 'w') as f:
-        json.dump(cfg, f, indent=1)
-    subdomains = [
-        ('crm.ty-dev.site', 'crm', 'crm'),
-        ('helpdesk.ty-dev.site', 'helpdesk', 'helpdesk'),
-        ('chat.ty-dev.site', 'raven', 'raven'),
-        ('wiki.ty-dev.site', 'wiki-app', 'wiki'),
-        ('insights.ty-dev.site', 'insights', 'insights')
-    ]
-    for sub, home, defapp in subdomains:
-        sdir = os.path.join(sites_dir, sub)
-        os.makedirs(sdir, exist_ok=True)
-        scfg = dict(cfg)
-        scfg['home_page'] = home
-        scfg['default_app'] = defapp
-        scfg['cookie_domain'] = '.ty-dev.site'
-        with open(os.path.join(sdir, 'site_config.json'), 'w') as f:
-            json.dump(scfg, f, indent=1)
-        for fold in ['public/files', 'private/files']:
-            target = os.path.join(sites_dir, 'erp.ty-dev.site', fold)
-            link = os.path.join(sdir, fold)
-            os.makedirs(target, exist_ok=True)
-            if os.path.exists(link) and not os.path.islink(link):
-                shutil.rmtree(link)
-            if not os.path.exists(link):
-                os.symlink(target, link)
-    print('Unified multi-domain sites configuration verified.')
-";
+          import json, os, shutil
+          sites_dir = 'sites'
+          erp_cfg_path = os.path.join(sites_dir, 'erp.ty-dev.site', 'site_config.json')
+          if os.path.exists(erp_cfg_path):
+              with open(erp_cfg_path) as f:
+                  cfg = json.load(f)
+              cfg['cookie_domain'] = '.ty-dev.site'
+              with open(erp_cfg_path, 'w') as f:
+                  json.dump(cfg, f, indent=1)
+              subdomains = [
+                  ('crm.ty-dev.site', 'crm', 'crm'),
+                  ('helpdesk.ty-dev.site', 'helpdesk', 'helpdesk'),
+                  ('chat.ty-dev.site', 'raven', 'raven'),
+                  ('wiki.ty-dev.site', 'wiki-app', 'wiki'),
+                  ('insights.ty-dev.site', 'insights', 'insights')
+              ]
+              for sub, home, defapp in subdomains:
+                  sdir = os.path.join(sites_dir, sub)
+                  os.makedirs(sdir, exist_ok=True)
+                  scfg = dict(cfg)
+                  scfg['home_page'] = home
+                  scfg['default_app'] = defapp
+                  scfg['cookie_domain'] = '.ty-dev.site'
+                  with open(os.path.join(sdir, 'site_config.json'), 'w') as f:
+                      json.dump(scfg, f, indent=1)
+                  for fold in ['public/files', 'private/files']:
+                      target = os.path.join(sites_dir, 'erp.ty-dev.site', fold)
+                      link = os.path.join(sdir, fold)
+                      os.makedirs(target, exist_ok=True)
+                      if os.path.exists(link) and not os.path.islink(link):
+                          shutil.rmtree(link)
+                      if not os.path.exists(link):
+                          os.symlink(target, link)
+              print('Unified multi-domain sites configuration verified.')
+          ";
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
