@@ -10,27 +10,15 @@ USER frappe
 WORKDIR /home/frappe/frappe-bench
 
 RUN set -e; \
-    yarn config set network-concurrency 2; \
-    yarn config set network-timeout 300000; \
     bench get-app --branch=main --resolve-deps --skip-assets https://github.com/frappe/crm; \
-    bench get-app --branch=version-16 --resolve-deps --skip-assets https://github.com/frappe/helpdesk; \
-    bench get-app --branch=main --resolve-deps --skip-assets https://github.com/frappe/raven; \
-    bench get-app --branch=version-3 --resolve-deps --skip-assets https://github.com/frappe/wiki; \
-    bench get-app --branch=version-3 --resolve-deps --skip-assets https://github.com/frappe/insights
-
-RUN set -e; \
-    (cd apps/crm/frontend && yarn install --network-concurrency 2 --network-timeout 300000); \
-    (cd apps/helpdesk/desk && yarn install --network-concurrency 2 --network-timeout 300000); \
-    (cd apps/raven && yarn install --network-concurrency 2 --network-timeout 300000); \
-    (cd apps/wiki && yarn install --network-concurrency 2 --network-timeout 300000); \
-    (cd apps/insights && yarn install --network-concurrency 2 --network-timeout 300000)
-
-RUN set -e; \
+    (cd apps/crm/frontend && yarn install); \
     bench build --app crm; \
     ln -sf /home/frappe/frappe-bench/apps/crm/crm/public /home/frappe/frappe-bench/assets/crm
 
 RUN set -e; \
     bench set-config -gp socketio_port 9000; \
+    bench get-app --branch=version-16 --resolve-deps --skip-assets https://github.com/frappe/helpdesk; \
+    (cd apps/helpdesk/desk && yarn install); \
     bench build --app helpdesk; \
     ln -sf /home/frappe/frappe-bench/apps/helpdesk/helpdesk/public /home/frappe/frappe-bench/assets/helpdesk
 
@@ -43,10 +31,20 @@ RUN set -e; \
     ln -sf /home/frappe/frappe-bench/apps/hrms/hrms/public /home/frappe/frappe-bench/assets/hrms
 
 RUN set -e; \
+    bench get-app --branch=main --resolve-deps --skip-assets https://github.com/frappe/raven; \
+    (cd apps/raven && yarn install); \
     bench build --app raven; \
-    ln -sf /home/frappe/frappe-bench/apps/raven/raven/public /home/frappe/frappe-bench/assets/raven; \
+    ln -sf /home/frappe/frappe-bench/apps/raven/raven/public /home/frappe/frappe-bench/assets/raven
+
+RUN set -e; \
+    bench get-app --branch=version-3 --resolve-deps --skip-assets https://github.com/frappe/wiki; \
+    (cd apps/wiki && yarn install); \
     bench build --app wiki; \
-    ln -sf /home/frappe/frappe-bench/apps/wiki/wiki/public /home/frappe/frappe-bench/assets/wiki; \
+    ln -sf /home/frappe/frappe-bench/apps/wiki/wiki/public /home/frappe/frappe-bench/assets/wiki
+
+RUN set -e; \
+    bench get-app --branch=version-3 --resolve-deps --skip-assets https://github.com/frappe/insights; \
+    (cd apps/insights && yarn install); \
     bench build --app insights; \
     ln -sf /home/frappe/frappe-bench/apps/insights/insights/public /home/frappe/frappe-bench/assets/insights
 
