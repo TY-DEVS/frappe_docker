@@ -1,16 +1,22 @@
 FROM frappe/erpnext:v16.55.0
 
+USER root
+RUN set -e; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends gcc python3-dev build-essential; \
+    rm -rf /var/lib/apt/lists/*
+
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
 RUN set -e; \
     yarn config set network-concurrency 2; \
     yarn config set network-timeout 300000; \
-    bench get-app --branch=main --resolve-deps --skip-assets crm https://github.com/frappe/crm; \
-    bench get-app --branch=version-16 --resolve-deps --skip-assets helpdesk https://github.com/frappe/helpdesk; \
-    bench get-app --branch=main --resolve-deps --skip-assets raven https://github.com/frappe/raven; \
-    bench get-app --branch=version-3 --resolve-deps --skip-assets wiki https://github.com/frappe/wiki; \
-    bench get-app --branch=version-3 --resolve-deps --skip-assets insights https://github.com/frappe/insights
+    bench get-app --branch=main --resolve-deps --skip-assets https://github.com/frappe/crm; \
+    bench get-app --branch=version-16 --resolve-deps --skip-assets https://github.com/frappe/helpdesk; \
+    bench get-app --branch=main --resolve-deps --skip-assets https://github.com/frappe/raven; \
+    bench get-app --branch=version-3 --resolve-deps --skip-assets https://github.com/frappe/wiki; \
+    bench get-app --branch=version-3 --resolve-deps --skip-assets https://github.com/frappe/insights
 
 RUN set -e; \
     (cd apps/crm/frontend && yarn install --network-concurrency 2 --network-timeout 300000); \
@@ -30,7 +36,7 @@ RUN set -e; \
 
 RUN set -e; \
     yarn config set ignore-scripts true; \
-    bench get-app --branch=version-16 --skip-assets hrms https://github.com/frappe/hrms; \
+    bench get-app --branch=version-16 --skip-assets https://github.com/frappe/hrms; \
     yarn config set ignore-scripts false; \
     npm --prefix apps/hrms pkg delete scripts.build scripts.postinstall; \
     bench build --app hrms; \
